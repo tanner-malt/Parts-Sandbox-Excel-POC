@@ -4,7 +4,6 @@ This class is responsible for managing the Quote Master File, including loading,
 '''
 import openpyxl
 
-
 class QMFile:
     '''
     This class represents one of many Quote Master Files.
@@ -16,6 +15,7 @@ class QMFile:
         Loads the workbook and initializes the data structure.
         '''
         try:
+            print("Trying")
             self.file_path = file_path
             self.workbook = openpyxl.load_workbook(file_path)
             self.data = self.load_data()
