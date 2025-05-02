@@ -2,7 +2,8 @@
 File to define the main functions for the project.
 '''
 import os
-
+import openpyxl
+import GUI
 
 def list_quote_master_files():
     """
@@ -35,4 +36,13 @@ def prepare_master(master_sheet):
     """
     Prepares the master sheet for processing.
     """
+
+
+def analysis_loop():
+    '''
+    This is the analysis loop called to facilitate planning, things such as looking up MOQ, total spend, etc can be found here.
+    '''
+    workbook = openpyxl.load_workbook("excels\parts_sandbox.xlsx")
+    GUI.make_analysis_window()
     
+    print(workbook)

@@ -5,7 +5,7 @@ This module creates a graphical user interface (GUI) using Tkinter for the appli
 
 import tkinter as tk
 from tkinter import messagebox  # Import messagebox for error dialogs
-import mainfuncs as mf
+import mainfuncs as mf # These are localized functions I wanted seperate to maintain fascade of being clean
 import os  # Import os to handle file opening
 
 def start_application():
@@ -25,7 +25,7 @@ def start_application():
     list_button = tk.Button(main_window, text="List Quote Master Files", command=list_files, font=("Arial", 12))
     list_button.pack(pady=10) 
 
-    list_button = tk.Button(main_window, text="Analyze Files", command=print("dummy"), font=("Arial", 12))
+    list_button = tk.Button(main_window, text="Analysis Mode", command= mf.analysis_loop, font=("Arial", 12))
     list_button.pack(pady=10) 
 
     list_button = tk.Button(main_window, text="EAU Forecast", command=print("dummy"), font=("Arial", 12))
@@ -110,3 +110,13 @@ def list_files():
     # Add a close button
     close_button = tk.Button(file_window, text="Close", command=file_window.destroy, font=("Arial", 10))
     close_button.pack(pady=10)
+
+
+
+def make_analysis_window():
+    '''
+    This function will create the analysis window, and any other items needed
+    '''
+    analysis_window = tk.Toplevel()
+    analysis_window.title("Quote Master Files")
+    analysis_window.geometry("600x600")
