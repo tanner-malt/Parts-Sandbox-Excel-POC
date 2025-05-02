@@ -30,3 +30,9 @@ def list_quote_master_files():
     except FileNotFoundError:
         print(f"Directory {quote_master_files_directory} not found.")
         return []
+    
+def prepare_master(master_sheet):
+    """
+    Prepares the master sheet for processing.
+    """
+    

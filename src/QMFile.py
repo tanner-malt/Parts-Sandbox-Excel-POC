@@ -22,3 +22,13 @@ class QMFile:
         except FileNotFoundError:
             raise FileNotFoundError(f"File {file_path} not found.")
             del self
+
+    def load_master_sheet(self):
+        '''
+        Loads the master sheet from the workbook.
+        Returns the master sheet object.
+        '''
+        try:
+            return self.workbook['Master Part List']
+        except KeyError:
+            raise KeyError("Master Part List sheet not found in the workbook.")
