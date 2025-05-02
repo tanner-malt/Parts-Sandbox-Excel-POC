@@ -25,6 +25,15 @@ def start_application():
     list_button = tk.Button(main_window, text="List Quote Master Files", command=list_files, font=("Arial", 12))
     list_button.pack(pady=10) 
 
+    list_button = tk.Button(main_window, text="Analyze Files", command=print("dummy"), font=("Arial", 12))
+    list_button.pack(pady=10) 
+
+    list_button = tk.Button(main_window, text="EAU Forecast", command=print("dummy"), font=("Arial", 12))
+    list_button.pack(pady=10)
+
+    list_button = tk.Button(main_window, text="Search Parts", command=print("dummy"), font=("Arial", 12))
+    list_button.pack(pady=10) 
+
     # Create a button to exit the application
     exit_button = tk.Button(main_window, text="Exit", command=main_window.quit, font=("Arial", 12))
     exit_button.pack(pady=10)
@@ -46,7 +55,7 @@ def list_files():
         quote_master_files = [
             os.path.join(excel_folder, file)
             for file in os.listdir(excel_folder)
-            if os.path.isfile(os.path.join(excel_folder, file))
+            if os.path.isfile(os.path.join(excel_folder, file)) and file != "parts_sandbox"
         ]
     except FileNotFoundError:
         messagebox.showerror("Error", f"The folder '{excel_folder}' does not exist.")
@@ -55,8 +64,7 @@ def list_files():
     # Create a new window to display the list of files
     file_window = tk.Toplevel()
     file_window.title("Quote Master Files")
-    file_window.geometry("400x300")
-    file_window.resizable(False, False)
+    file_window.geometry("600x600")
 
     # Create a label to display the title
     file_label = tk.Label(file_window, text="Quote Master Files:", font=("Arial", 12))
@@ -82,8 +90,22 @@ def list_files():
         except IndexError:
             messagebox.showerror("Error", "No file selected.")
 
+    #Dummy function to update alias, needs to be implemented.
+    def show_context_menu(event):
+        # Create a context menu
+        file_listbox.selection_clear(0, tk.END)
+        file_listbox.selection_set(file_listbox.nearest(event.y))
+        selected_index = file_listbox.curselection()
+        if selected_index:
+            context_menu = tk.Menu(file_window, tearoff=0)
+            context_menu.add_command(label="Open", command=open_file)
+            context_menu.add_command(label="Update Alias",command = print("Update Alias"))
+            context_menu.post(event.x_root, event.y_root)
+
+
     # Bind double-click event to the Listbox
     file_listbox.bind("<Double-1>", open_file)
+    file_listbox.bind("<Button-3>", show_context_menu)  # Right-click to show context menu
 
     # Add a close button
     close_button = tk.Button(file_window, text="Close", command=file_window.destroy, font=("Arial", 10))
