@@ -4,7 +4,11 @@ It is responsible for managing the overall flow of the application, including GU
 '''
 import openpyxl
 import pandas as pd
+import os
+import logging
+from QMFile import QMFile
 
+logger = logging.getLogger(__name__)
 
 class ApplicationManager:
     '''
@@ -29,10 +33,10 @@ class ApplicationManager:
         If it does not exist, it creates a new one.
         '''
         try:
-            print("Trying to load the workbook", flush=True)
+            logger.info("Checking for parts_sandbox.xlsx")
             self.workbook = openpyxl.load_workbook(r'excels/parts_sandbox.xlsx')
         except FileNotFoundError:
-            print("Database file not found. Creating a new one.", flush=True)
+            logger.info("Database file not found. Creating a new one.")
             workbook = openpyxl.Workbook()
             workbook.save(r'excels/parts_sandbox.xlsx')
 
@@ -81,12 +85,97 @@ class ApplicationManager:
                 | Part456     | Widget B    |
         '''
         try:
-            print(f'Loading workbook at {file_path}')
+            logger.info(f'Loading workbook at {file_path}')
             workbook = openpyxl.load_workbook(file_path)
             sheet = workbook['Master Part List']
 
             #Make a dataframe of the sheet
             df = pd.DataFrame(sheet.values)
-            print(df.head())
+            logger.debug(df.head())
         except FileNotFoundError:
             raise FileNotFoundError(f"File {file_path} not found.")
+
+    def refresh_all_files(self):
+        """
+        Refreshes the database with all Quote Master files.
+        Returns True if successful, False if there were any non-critical errors.
+        Raises Exception for critical errors.
+        """
+        try:
+            logger.info("Starting database refresh")
+            excel_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'excels'))
+            sandbox_path = os.path.join(excel_folder, 'parts_sandbox.xlsx')
+            
+            # Get list of Quote Master files
+            files = [
+                os.path.join(excel_folder, f) 
+                for f in os.listdir(excel_folder) 
+                if f.endswith('.xlsx') and f != "parts_sandbox.xlsx"
+            ]
+            
+            if not files:
+                logger.warning("No Quote Master files found")
+                return False
+                
+            # Load or create aliases sheet
+            try:
+                existing_aliases = pd.read_excel(sandbox_path, sheet_name='aliases')
+                logger.debug("Loaded existing aliases sheet")
+            except (FileNotFoundError, KeyError):
+                existing_aliases = pd.DataFrame(columns=['alias', 'value'])
+                logger.info("Created new aliases sheet")
+            
+            had_warnings = False
+            all_aliases = []
+            
+            # Process each file
+            for file in files:
+                try:
+                    logger.debug(f"Processing file: {file}")
+                    qm_file = QMFile(file)
+                    master_sheet = qm_file.load_master_sheet()
+                    df = pd.DataFrame(master_sheet.values)
+                    
+                    # Skip header row and get alias/value columns
+                    df.columns = df.iloc[0]
+                    df = df.iloc[1:]
+                    
+                    if 'alias' in df.columns and 'value' in df.columns:
+                        aliases_from_file = df[['alias', 'value']].copy()
+                        all_aliases.append(aliases_from_file)
+                        logger.debug(f"Successfully processed {len(aliases_from_file)} aliases from {file}")
+                    else:
+                        logger.warning(f"File {file} missing required columns")
+                        had_warnings = True
+                        
+                except Exception as e:
+                    logger.error(f"Error processing {file}: {str(e)}", exc_info=True)
+                    had_warnings = True
+                    continue
+                finally:
+                    if hasattr(qm_file, 'workbook'):
+                        qm_file.workbook.close()
+            
+            if all_aliases:
+                # Combine all new aliases
+                new_aliases = pd.concat(all_aliases, ignore_index=True)
+                new_aliases = new_aliases.drop_duplicates(subset=['alias'], keep='first')
+                
+                # Merge with existing aliases, keeping existing ones in case of conflict
+                combined_aliases = pd.concat([existing_aliases, new_aliases], ignore_index=True)
+                combined_aliases = combined_aliases.drop_duplicates(subset=['alias'], keep='first')
+                
+                # Save back to parts_sandbox.xlsx
+                with pd.ExcelWriter(sandbox_path, engine='openpyxl', mode='a') as writer:
+                    combined_aliases.to_excel(writer, sheet_name='aliases', index=False)
+                
+                logger.info(f"Successfully saved {len(combined_aliases)} aliases to database")
+            
+            return not had_warnings
+            
+        except Exception as e:
+            logger.error("Critical error during refresh", exc_info=True)
+            raise Exception(f"Error preparing master file: {str(e)}")
+        finally:
+            if hasattr(self, 'workbook'):
+                self.workbook.close()
