@@ -1,5 +1,5 @@
 '''
-Tkinter GUI for the application
+Tkinter GUI for the application - Client Mode
 This module creates a graphical user interface (GUI) using Tkinter for the application.
 '''
 
@@ -22,7 +22,7 @@ def start_application(manager):
     
     # Create the main application window
     main_window = tk.Tk()
-    main_window.title("Parts Sandbox Manager")
+    main_window.title("Parts Sandbox Manager - Client")
     main_window.geometry("800x600")
 
     # Create a label to display a welcome message
@@ -37,6 +37,7 @@ def start_application(manager):
     list_button.pack(pady=10) 
 
     list_button = tk.Button(main_window, text="EAU Forecast", command=lambda: print("dummy"), font=("Arial", 12))
+    list_button = tk.Button(main_window, text="EAU Forecast", command=lambda: print("dummy"), font=("Arial", 12))
     list_button.pack(pady=10)
 
     list_button = tk.Button(main_window, text="Search Parts", command=lambda: print("dummy"), font=("Arial", 12))
@@ -50,16 +51,13 @@ def start_application(manager):
     # Start the Tkinter event loop
     main_window.mainloop()
 
-
 def list_files():
     '''
     This function will list all the files in the "excel" folder in the GUI.
-    It will be called when the user clicks the "List Quote Master Files" button.
     '''
     logger.info("Opening Quote Master Files window")
     excel_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'excels'))
 
-    # Get the list of files in the "excel" folder
     try:
         quote_master_files = [
             os.path.join(excel_folder, file)
@@ -72,12 +70,10 @@ def list_files():
         messagebox.showerror("Error", f"The folder '{excel_folder}' does not exist.")
         return
 
-    # Create a new window to display the list of files
     file_window = tk.Toplevel()
     file_window.title("Quote Master Files")
     file_window.geometry("600x600")
 
-    # Create a label to display the title
     file_label = tk.Label(file_window, text="Quote Master Files:", font=("Arial", 12))
     file_label.pack(pady=10)
 
@@ -85,7 +81,6 @@ def list_files():
     file_listbox = tk.Listbox(file_window, font=("Arial", 10), width=50, height=15, selectmode=tk.SINGLE)
     file_listbox.pack(pady=10)
 
-    # Insert each file into the Listbox
     for file in quote_master_files:
         file_listbox.insert(tk.END, file)
 
@@ -139,3 +134,16 @@ def make_analysis_window():
     analysis_window = tk.Toplevel()
     analysis_window.title("Analysis Mode")
     analysis_window.geometry("600x600")
+
+    # Add alias display or other analysis features here
+    alias_label = tk.Label(analysis_window, text="Available Aliases:", font=("Arial", 12))
+    alias_label.pack(pady=10)
+
+    alias_listbox = tk.Listbox(analysis_window, font=("Arial", 10), width=50, height=15)
+    alias_listbox.pack(pady=10)
+
+    for alias in aliases:
+        alias_listbox.insert(tk.END, f"{alias['alias']} -> {alias['value']}")
+
+    close_button = tk.Button(analysis_window, text="Close", command=analysis_window.destroy, font=("Arial", 10))
+    close_button.pack(pady=10)
